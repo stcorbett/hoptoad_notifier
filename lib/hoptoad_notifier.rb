@@ -23,7 +23,8 @@ module HoptoadNotifier
 
   class << self
     attr_accessor :host, :port, :secure, :api_key, :http_open_timeout, :http_read_timeout,
-                  :proxy_host, :proxy_port, :proxy_user, :proxy_pass, :output
+                  :proxy_host, :proxy_port, :proxy_user, :proxy_pass, :output, :cc_admins,
+                  :local_mailer
 
     def backtrace_filters
       @backtrace_filters ||= []
@@ -233,6 +234,7 @@ module HoptoadNotifier
         notice = normalize_notice(hash_or_exception)
         notice = clean_notice(notice)
         send_to_hoptoad(:notice => notice)
+        send_to_admins(:notice => notice) if cc_admins
       end
     end
 
@@ -315,6 +317,10 @@ module HoptoadNotifier
       logger.send level, LOG_PREFIX + message if logger
       HoptoadNotifier.report_environment_info
       HoptoadNotifier.report_response_body(response.body) if response && response.respond_to?(:body)
+    end
+    
+    def send_to_admins data
+      send(local_mailer + ".cc_hoptoad_error", cc_admins, data)
     end
 
     def send_to_hoptoad data #:nodoc:

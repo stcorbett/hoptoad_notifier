@@ -234,7 +234,7 @@ module HoptoadNotifier
         notice = normalize_notice(hash_or_exception)
         notice = clean_notice(notice)
         send_to_hoptoad(:notice => notice)
-        send_to_admins(:notice => notice) if cc_admins
+        send_to_admins(:notice => notice) if HoptoadNotifier.cc_admins
       end
     end
 
@@ -320,7 +320,8 @@ module HoptoadNotifier
     end
     
     def send_to_admins data
-      send(local_mailer + ".cc_hoptoad_error", cc_admins, data)
+      mailer = Kernel.const_get(HoptoadNotifier.local_mailer)
+      mailer.send( "deliver_cc_hoptoad_error", HoptoadNotifier.cc_admins, data)
     end
 
     def send_to_hoptoad data #:nodoc:

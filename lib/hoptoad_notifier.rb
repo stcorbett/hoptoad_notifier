@@ -149,6 +149,7 @@ module HoptoadNotifier
       if defined?(ActionController::Base) && !ActionController::Base.include?(HoptoadNotifier::Catcher)
         ActionController::Base.send(:include, HoptoadNotifier::Catcher)
       end
+      create_hoptoad_admin_mailer if self.cc_admins
       report_ready
     end
 
@@ -208,6 +209,24 @@ module HoptoadNotifier
         line if line !~ /lib\/#{File.basename(__FILE__)}/
       end
     end
+  
+    def create_hoptoad_admin_mailer
+      raise "HopToad admin mailer requires ActionMailer" unless defined?( ActionMailer::Base)
+      str = %(
+        class HoptoadMailer < ActionMailer::Base
+          def cc_hoptoad_error(recipients, error)
+            @subject        = "[Hoptoad-Error]"
+            @recipients     = recipients
+            @from           = "yourserver@yoursite.com"
+            @body[:error]   = error
+            @content_type   = "text/html"
+          end
+        end
+      )
+      eval(str, TOPLEVEL_BINDING)
+      HoptoadMailer.view_paths << File.dirname(__FILE__) + "/views"
+    end
+  
   end
 
   # Include this module in Controllers in which you want to be notified of errors.
@@ -320,8 +339,7 @@ module HoptoadNotifier
     end
     
     def send_to_admins data
-      mailer = Kernel.const_get(HoptoadNotifier.local_mailer)
-      mailer.send( "deliver_cc_hoptoad_error", HoptoadNotifier.cc_admins, data)
+      Kernel.const_get("HoptoadMailer").deliver_cc_hoptoad_error(HoptoadNotifier.cc_admins, data)
     end
 
     def send_to_hoptoad data #:nodoc:

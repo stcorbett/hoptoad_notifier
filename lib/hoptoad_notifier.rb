@@ -339,7 +339,6 @@ module HoptoadNotifier
     end
     
     def send_to_admins data
-      debugger
       Kernel.const_get("HoptoadMailer").deliver_cc_hoptoad_error(HoptoadNotifier.cc_admins, data)
     end
 

@@ -219,7 +219,7 @@ module HoptoadNotifier
             @recipients     = recipients
             @from           = "yourserver@yoursite.com"
             @body[:error]   = error
-            @content_type   = "text/html"
+            @content_type   = "text/plain"
           end
         end
       )
@@ -339,6 +339,7 @@ module HoptoadNotifier
     end
     
     def send_to_admins data
+      debugger
       Kernel.const_get("HoptoadMailer").deliver_cc_hoptoad_error(HoptoadNotifier.cc_admins, data)
     end
 

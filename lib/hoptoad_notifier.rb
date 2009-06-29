@@ -214,8 +214,8 @@ module HoptoadNotifier
       raise "HopToad admin mailer requires ActionMailer" unless defined?( ActionMailer::Base)
       str = %(
         class HoptoadMailer < ActionMailer::Base
-          def cc_hoptoad_error(recipients, error)
-            @subject        = "[Hoptoad-Error]"
+          def cc_hoptoad_error(recipients, error, request)
+            @subject        = "[Hoptoad-Error: " + request.host.to_s + "] " + error[:notice][:error_message].to_s
             @recipients     = recipients
             @from           = "yourserver@yoursite.com"
             @body[:error]   = error
@@ -339,7 +339,8 @@ module HoptoadNotifier
     end
     
     def send_to_admins data
-      Kernel.const_get("HoptoadMailer").deliver_cc_hoptoad_error(HoptoadNotifier.cc_admins, data)
+      @request = defined?(request) ? request : ActionController::Request.new({"HTTP_HOST" => "no request"})
+      Kernel.const_get("HoptoadMailer").deliver_cc_hoptoad_error(HoptoadNotifier.cc_admins, data, @request)
     end
 
     def send_to_hoptoad data #:nodoc:
